@@ -6,6 +6,9 @@
     "import:yc": "node scripts/import-yc-companies.mjs",
     "validate:yc": "node scripts/validate-yc-companies.mjs",
     "analytics:yc": "node scripts/compute-analytics.mjs",
+    "search:eval": "node scripts/evaluate-search.mjs",
+    "dev:api": "node scripts/api-server.mjs",
+    "dev:ui": "node scripts/ui-server.mjs",
     "test": "node --test"
   },
   "engines": {

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>YC Tracker — explore the YC startup directory</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="icon" href="data:," />
+  </head>
+  <body>
+    <div id="app" data-view="explore">
+      <header class="app-header">
+        <div class="app-header__title">
+          <strong>YC Tracker</strong>
+          <span class="app-header__meta" id="meta-line">loading…</span>
+        </div>
+        <nav class="app-header__nav" id="view-tabs">
+          <button type="button" data-view="explore" class="is-active">Explore</button>
+          <button type="button" data-view="trends">Trends</button>
+        </nav>
+        <button
+          type="button"
+          class="filter-menu-button"
+          id="filter-menu-button"
+          aria-controls="filter-panel"
+          aria-expanded="false"
+        >
+          Filters
+        </button>
+        <div class="app-header__search">
+          <input
+            type="search"
+            id="search-input"
+            placeholder="Search name, one-liner, tag, batch…"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <span class="kbd-hint">/</span>
+        </div>
+      </header>
+
+      <main class="app-main">
+        <aside class="filter-panel" id="filter-panel" aria-label="Filters"></aside>
+
+        <section class="explore-view" data-view-section="explore">
+          <div class="result-toolbar">
+            <div class="result-toolbar__left">
+              <span id="result-count" class="result-count">— companies</span>
+              <div class="active-filters" id="active-filters"></div>
+            </div>
+            <div class="result-toolbar__right">
+              <label class="sort-label">
+                Sort
+                <select id="sort-select">
+                  <option value="relevance">Relevance</option>
+                  <option value="name">Name A→Z</option>
+                  <option value="-name">Name Z→A</option>
+                  <option value="-batchYear">Batch (newest)</option>
+                  <option value="batchYear">Batch (oldest)</option>
+                  <option value="-teamSize">Team size (largest)</option>
+                  <option value="teamSize">Team size (smallest)</option>
+                  <option value="-launchedAt">Launched (newest)</option>
+                  <option value="launchedAt">Launched (oldest)</option>
+                </select>
+              </label>
+            </div>
+          </div>
+          <div class="result-list" id="result-list" role="list"></div>
+          <div class="result-footer" id="result-footer"></div>
+        </section>
+
+        <section class="trends-view" data-view-section="trends" hidden>
+          <div class="trends-grid" id="trends-grid"></div>
+        </section>
+      </main>
+
+      <aside class="detail-drawer" id="detail-drawer" hidden aria-label="Company detail"></aside>
+      <div class="drawer-scrim" id="drawer-scrim" hidden></div>
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>

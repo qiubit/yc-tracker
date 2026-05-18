@@ -29,6 +29,7 @@ scripts/yc-normalize.mjs              Agent 01
 scripts/enrich-*                      Agent 02
 scripts/compute-analytics.mjs         Agent 04
 scripts/api-server.mjs                Agent 06
+scripts/ui-server.mjs                 Agent 05
 src/lib/db*                           Agent 06, with schema coordination from Agent 01
 src/lib/api*                          Agent 06
 src/lib/search*                       Agent 03
@@ -48,6 +49,6 @@ If an agent needs to edit another agent's area, document the reason in its final
 
 - Runtime persistence currently reads JSON artifacts via `src/lib/db.mjs`; decide whether Agent 06 should wire the SQLite migration into the API before UI work, or keep JSON as the MVP read model.
 - API analytics contract currently uses `/api/facets` and `/api/trends/*`; decide whether to add `/api/analytics/summary` as an alias for UI convenience.
-- API company list currently filters by batch, status, industry, regions, tags, hiring, top company, team-size bucket, and text query; `subindustry`, `nonprofit`, and `stage` filters remain Agent 06 follow-ups if needed by the UI.
-- The app scaffold can be Next.js App Router unless an implementing agent finds a strong local reason to use Vite.
+- API company list currently filters by batch, status, industry, regions, tags, hiring, top company, team-size bucket, and text query. Text queries can use `sort=relevance` to share Agent 03 ranking. `subindustry`, `nonprofit`, and `stage` filters remain Agent 06 follow-ups if needed by the UI.
+- The current MVP UI (Agent 05) is a zero-build vanilla ES-module SPA under `src/app/`, served and proxied to the API by `scripts/ui-server.mjs`. Reason: the repo has no installed dependencies and the runnable-MVP norm prefers `node`-only scripts. A future Agent 05 pass can migrate to Next.js without changing API contracts.
 - Embedding provider and model are deferred until credentials and product need are clear.

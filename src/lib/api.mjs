@@ -1,5 +1,10 @@
 import { createServer } from "node:http";
 import { loadCompanyStore } from "./db.mjs";
+import {
+  getSimilarCompaniesBody,
+  searchCompaniesBody,
+  searchScore,
+} from "./search.mjs";
 
 export const TEAM_SIZE_BUCKETS = [
   { value: "1", label: "1", min: 1, max: 1 },
@@ -12,9 +17,9 @@ export const TEAM_SIZE_BUCKETS = [
 ];
 
 const DEFAULT_LIMIT = 50;
-const DEFAULT_SEARCH_LIMIT = 20;
 const MAX_LIMIT = 100;
 const SORTS = new Set([
+  "relevance",
   "name",
   "-name",
   "batch",
@@ -97,7 +102,9 @@ export function listCompanies(store, params = {}) {
   const sort = parseSort(params.sort);
 
   const filtered = applyCompanyFilters(store.companies, filters);
-  const sorted = sortCompanies(filtered, sort);
+  const sorted = sort === "relevance" && filters.q
+    ? sortCompaniesByRelevance(filtered, filters.q)
+    : sortCompanies(filtered, sort);
   const data = sorted.slice(offset, offset + limit);
 
   return withMeta(store, {
@@ -151,58 +158,12 @@ export function getFacets(store) {
 }
 
 export function searchCompanies(store, params = {}) {
-  const q = stringParam(params.q);
-  const limit = parseLimit(params.limit, DEFAULT_SEARCH_LIMIT);
-  const offset = parseOffset(params.offset);
-
-  if (!q) {
-    return withMeta(store, {
-      data: [],
-      pagination: pagination(0, limit, offset),
-      query: "",
-    });
-  }
-
-  const scored = store.companies
-    .map((company) => ({ company, score: searchScore(company, q) }))
-    .filter((entry) => entry.score > 0)
-    .sort((a, b) => b.score - a.score || a.company.name.localeCompare(b.company.name));
-
-  const data = scored.slice(offset, offset + limit).map(({ company, score }) => ({
-    company,
-    score,
-  }));
-
-  return withMeta(store, {
-    data,
-    pagination: pagination(scored.length, limit, offset),
-    query: q,
-  });
+  return withMeta(store, searchCompaniesBody(store, params));
 }
 
 export function getSimilarCompanies(store, slug, params = {}) {
-  const company = store.bySlug.get(slug);
-  const limit = parseLimit(params.limit, 10);
-  const offset = parseOffset(params.offset);
-
-  if (!company) {
-    return null;
-  }
-
-  const scored = store.companies
-    .filter((candidate) => candidate.slug !== company.slug)
-    .map((candidate) => ({ company: candidate, score: similarityScore(company, candidate) }))
-    .filter((entry) => entry.score > 0)
-    .sort((a, b) => b.score - a.score || a.company.name.localeCompare(b.company.name));
-
-  return withMeta(store, {
-    data: scored.slice(offset, offset + limit).map(({ company: candidate, score }) => ({
-      company: candidate,
-      score,
-    })),
-    pagination: pagination(scored.length, limit, offset),
-    sourceCompany: company,
-  });
+  const body = getSimilarCompaniesBody(store, slug, params);
+  return body ? withMeta(store, body) : null;
 }
 
 export function getBatchTrends(store, params = {}) {
@@ -330,48 +291,6 @@ export function teamSizeBucket(teamSize) {
   return TEAM_SIZE_BUCKETS.find((bucket) => bucket.min !== null && teamSize >= bucket.min && teamSize <= bucket.max)?.value ?? "unknown";
 }
 
-export function searchScore(company, query) {
-  const q = normalize(query);
-  if (!q) {
-    return 0;
-  }
-
-  const terms = q.split(/\s+/).filter(Boolean);
-  const weightedFields = [
-    [company.name, 12],
-    [company.slug, 8],
-    [company.oneLiner, 5],
-    [company.longDescription, 2],
-    [company.batch, 3],
-    [company.industry, 4],
-    [company.subindustry, 4],
-    [company.tags.join(" "), 4],
-    [company.regions.join(" "), 2],
-    [company.allLocations, 2],
-  ];
-
-  let score = 0;
-  for (const [value, weight] of weightedFields) {
-    const text = normalize(value);
-    if (!text) {
-      continue;
-    }
-    if (text === q) {
-      score += weight * 4;
-    } else if (text.startsWith(q)) {
-      score += weight * 3;
-    } else if (text.includes(q)) {
-      score += weight * 2;
-    }
-    for (const term of terms) {
-      if (term !== q && text.includes(term)) {
-        score += weight;
-      }
-    }
-  }
-  return score;
-}
-
 function trendResponse(store, trendName, params) {
   if (trendName === "batches") {
     return ok(getBatchTrends(store, params));
@@ -397,23 +316,6 @@ function trendEnvelope(store, rows, params) {
   });
 }
 
-function similarityScore(source, candidate) {
-  let score = 0;
-  if (source.industry && source.industry === candidate.industry) {
-    score += 8;
-  }
-  if (source.subindustry && source.subindustry === candidate.subindustry) {
-    score += 4;
-  }
-  if (source.batch && source.batch === candidate.batch) {
-    score += 2;
-  }
-  score += overlapCount(source.tags, candidate.tags) * 3;
-  score += overlapCount(source.industries, candidate.industries) * 2;
-  score += overlapCount(source.regions, candidate.regions);
-  return score;
-}
-
 function sortCompanies(companies, sort) {
   const desc = sort.startsWith("-");
   const field = desc ? sort.slice(1) : sort;
@@ -421,6 +323,13 @@ function sortCompanies(companies, sort) {
   return [...companies].sort((a, b) => {
     const compared = compareValues(a[field], b[field]);
     return compared === 0 ? a.name.localeCompare(b.name) : compared * multiplier;
+  });
+}
+
+function sortCompaniesByRelevance(companies, query) {
+  return [...companies].sort((a, b) => {
+    const compared = searchScore(b, query) - searchScore(a, query);
+    return compared === 0 ? a.name.localeCompare(b.name) : compared;
   });
 }
 
@@ -564,11 +473,6 @@ function matchesAny(values, accepted) {
 
 function normalize(value) {
   return String(value ?? "").trim().toLowerCase();
-}
-
-function overlapCount(left, right) {
-  const rightSet = new Set(right);
-  return left.filter((value) => rightSet.has(value)).length;
 }
 
 function groupBy(items, getKey) {

@@ -6,9 +6,9 @@ YC Tracker is a local/current-data explorer for the public Y Combinator Startup 
 
 ## Stack Decision
 
-- App: current implementation is a Node.js module/HTTP API with a future UI scaffold still open. If Agent 05 scaffolds a web app, use Next.js with TypeScript unless there is a strong local reason to choose Vite.
+- App: current implementation is a zero-build vanilla ES-module SPA in `src/app/`, served by `scripts/ui-server.mjs` and proxied to the Node.js API. If the app later migrates to a framework, keep the current API contracts stable.
 - Storage: current implementation uses JSON artifacts in `data/yc/` for the runnable MVP path, with a SQLite migration contract in `db/migrations/001_create_yc_tracker.sql` for the durable storage layer.
-- Search: SQLite FTS5 for lexical search first; embeddings can be added later behind the same company IDs.
+- Search: current implementation uses deterministic local lexical scoring in `src/lib/search.mjs`; SQLite FTS5 or embeddings can be added later behind the same company IDs and response envelopes.
 - Charts: Recharts or Observable Plot in the UI layer.
 - Data contracts: `src/lib/schema.ts` is the code source of truth and mirrors `prompts/shared-context.md`.
 
@@ -36,12 +36,19 @@ src/
     analytics.ts
     api.mjs
     db.mjs
+    search.mjs
     schema.ts
+  app/
+    index.html
+    main.js
+    styles.css
 scripts/
   import-yc-companies.mjs
   validate-yc-companies.mjs
   compute-analytics.mjs
   api-server.mjs
+  ui-server.mjs
+  evaluate-search.mjs
 data/
   yc/
 ```
@@ -92,6 +99,8 @@ Implemented API routes expose normalized data only:
 
 The API must not rename schema fields for UI convenience. If the UI needs derived labels or buckets, add derived fields in a clearly named response envelope rather than changing `Company`.
 
+When `GET /api/companies` receives `sort=relevance` with a non-empty text query, it ranks the filtered company list with the shared lexical scorer from `src/lib/search.mjs`. The UI uses that path for the explorer search box so query results stay consistent with the dedicated search layer.
+
 Proposed Agent 06 follow-up: either add `GET /api/analytics/summary` as an alias over the generated analytics summary or keep the `/api/trends/*` route family as the public contract. Agent 06 should also add filters for `subindustry`, `nonprofit`, and `stage` if Agent 05 needs those controls. Do not let route families drift into separate aggregate definitions.
 
 ## Verification
@@ -101,6 +110,7 @@ Current local verification commands:
 ```sh
 npm run validate:yc
 npm run analytics:yc
+npm run search:eval
 npm test
 ```
 

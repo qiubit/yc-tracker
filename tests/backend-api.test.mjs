@@ -30,6 +30,14 @@ test("company list filters by a known industry", async () => {
   assert.ok(response.data.every((company) => company.industry === industry));
 });
 
+test("company list can sort text queries by relevance", async () => {
+  const response = await handleApiRequest("/api/companies?q=airbnb%20travel%20marketplace&sort=relevance&limit=5");
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.data[0].slug, "airbnb");
+  assert.equal(response.body.sort, "relevance");
+});
+
 test("company detail endpoint returns one company by slug", async () => {
   const store = await loadCompanyStore();
   const company = store.companies[0];
