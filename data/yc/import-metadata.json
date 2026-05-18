@@ -1,0 +1,101 @@
+{
+  "source": "yc-directory-index",
+  "directoryUrl": "https://www.ycombinator.com/companies",
+  "sourceUrl": "https://45BWZJ1SGC-dsn.algolia.net/1/indexes/YCCompany_production/query",
+  "indexName": "YCCompany_production",
+  "fetchedAt": "2026-05-18T01:30:02.006Z",
+  "requestCount": 33,
+  "rangeCount": 33,
+  "hitsPerPage": 1000,
+  "fetchedRecordCount": 5914,
+  "normalizedRecordCount": 5914,
+  "reportedTotalHits": 5914,
+  "statusCounts": {
+    "Acquired": 779,
+    "Active": 4078,
+    "Inactive": 1034,
+    "Public": 23
+  },
+  "topIndustries": [
+    {
+      "value": "B2B",
+      "count": 3027
+    },
+    {
+      "value": "Consumer",
+      "count": 870
+    },
+    {
+      "value": "Healthcare",
+      "count": 672
+    },
+    {
+      "value": "Fintech",
+      "count": 623
+    },
+    {
+      "value": "Industrials",
+      "count": 383
+    },
+    {
+      "value": "Real Estate and Construction",
+      "count": 156
+    },
+    {
+      "value": "Education",
+      "count": 124
+    },
+    {
+      "value": "Government",
+      "count": 41
+    },
+    {
+      "value": "Unspecified",
+      "count": 18
+    }
+  ],
+  "topTags": [
+    {
+      "value": "SaaS",
+      "count": 1104
+    },
+    {
+      "value": "B2B",
+      "count": 1096
+    },
+    {
+      "value": "Artificial Intelligence",
+      "count": 928
+    },
+    {
+      "value": "AI",
+      "count": 803
+    },
+    {
+      "value": "Fintech",
+      "count": 695
+    },
+    {
+      "value": "Developer Tools",
+      "count": 532
+    },
+    {
+      "value": "Marketplace",
+      "count": 305
+    },
+    {
+      "value": "Generative AI",
+      "count": 256
+    },
+    {
+      "value": "Consumer",
+      "count": 238
+    },
+    {
+      "value": "Machine Learning",
+      "count": 230
+    }
+  ],
+  "missingIdentity": [],
+  "invalid": []
+}

@@ -1,0 +1,14 @@
+{
+  "name": "yc-tracker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "import:yc": "node scripts/import-yc-companies.mjs",
+    "validate:yc": "node scripts/validate-yc-companies.mjs",
+    "analytics:yc": "node scripts/compute-analytics.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
